@@ -11,97 +11,77 @@ ascii_art = r"""
 |_______/ |________/|_______/  \______/ |________/ \______/ 
                                                             
                                                             """
-# Leet map
-leet_map = {
-    'a': ['a', '@', '4'],
-    'e': ['e', '3'],
-    'i': ['i', '1', '!'],
-    'o': ['o', '0'],
-    's': ['s', '$', '5'],
-    't': ['t', '7']
-}
+def leet_variations(word):
+    leet_map = {
+        'a': ['4', '@'],
+        'e': ['3'],
+        'i': ['1', '!'],
+        'o': ['0'],
+        's': ['5', '$'],
+        't': ['7'],
+        'g': ['9']
+    }
+    variations = set([word])
+    for i, c in enumerate(word):
+        if c.lower() in leet_map:
+            for sub in leet_map[c.lower()]:
+                for variant in list(variations):
+                    new_variant = variant[:i] + sub + variant[i+1:]
+                    variations.add(new_variant)
+    return variations
 
-def to_leet(word):
-    """Gera variações em leet speak para uma palavra."""
-    options = []
-    for char in word:
-        if char.lower() in leet_map:
-            options.append(leet_map[char.lower()])
-        else:
-            options.append([char])
-    return [''.join(x) for x in itertools.product(*options)]
+# Inputs
+wordlist_file = input("Arquivo com palavras base: ").strip()
+try:
+    with open(wordlist_file, "r", encoding="utf-8") as f:
+        base_words = [line.strip() for line in f if line.strip()]
+except:
+    print("Erro ao abrir o arquivo.")
+    exit()
 
-def gerar_combinacoes(palavras, min_palavras, max_palavras, to_upper, use_leet, min_len, max_len):
-    for n in range(min_palavras, max_palavras + 1):
-        for combinacao in itertools.permutations(palavras, n):
-            base = ''.join(combinacao)
-            if to_upper:
-                base = base.upper()
-            if min_len <= len(base) <= max_len:
-                if use_leet:
-                    for variante in to_leet(base):
-                        if min_len <= len(variante) <= max_len:
-                            yield variante
-                else:
-                    yield base
+min_words = input("Mínimo de palavras combinadas (deixe vazio para sem limite): ").strip()
+max_words = input("Máximo de palavras combinadas (deixe vazio para sem limite): ").strip()
+min_words = int(min_words) if min_words.isdigit() else 1
+max_words = int(max_words) if max_words.isdigit() else len(base_words)
 
-def main():
-    print("=== GERADOR DE SENHAS COM LISTA E COMBINAÇÕES ===")
-    usar_lista = input("Deseja usar uma lista de palavras? (S/N): ").lower() == 's'
+min_len = input("Tamanho mínimo da senha (deixe vazio para ignorar): ").strip()
+max_len = input("Tamanho máximo da senha (deixe vazio para ignorar): ").strip()
+min_len = int(min_len) if min_len.isdigit() else 0
+max_len = int(max_len) if max_len.isdigit() else float('inf')
 
-    if usar_lista:
-        caminho = input("Caminho do arquivo com palavras (uma por linha): ").strip()
-        try:
-            with open(caminho, 'r', encoding='utf-8') as f:
-                palavras = [linha.strip() for linha in f if linha.strip()]
-        except FileNotFoundError:
-            print("Arquivo não encontrado.")
-            return
-    else:
-        palavras = []
-        min_len = int(input("Comprimento mínimo da senha: "))
-        max_len = int(input("Comprimento máximo da senha: "))
-        use_uppercase = input("Incluir maiúsculas? (S/N): ").lower() == 's'
-        use_lowercase = input("Incluir minúsculas? (S/N): ").lower() == 's'
-        use_numbers = input("Incluir números? (S/N): ").lower() == 's'
-        use_special = input("Incluir caracteres especiais? (S/N): ").lower() == 's'
+use_upper = input("Gerar variações com maiúsculas? (s/n): ").lower() == 's'
+use_leet = input("Gerar variações com l33t? (s/n): ").lower() == 's'
 
-        chars = ''
-        if use_uppercase:
-            chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        if use_lowercase:
-            chars += 'abcdefghijklmnopqrstuvwxyz'
-        if use_numbers:
-            chars += '0123456789'
-        if use_special:
-            chars += '!@#$%^&*()_-+=~`[]{}|\\:;"\'<>,.?/'
+output_file = input("Nome do arquivo de saída: ").strip()
+if not output_file:
+    output_file = "senhas.txt"
 
-        nome_arquivo = input("Nome do arquivo de saída (.txt será adicionado): ").strip() + '.txt'
-        with open(nome_arquivo, 'w', encoding='utf-8') as arquivo:
-            print("Gerando senhas...")
-            for length in range(min_len, max_len + 1):
-                for combination in itertools.product(chars, repeat=length):
-                    senha = ''.join(combination)
-                    arquivo.write(senha + '\n')
-                    print(senha)
-        print(f"\nTodas as senhas foram salvas em '{nome_arquivo}'")
-        return
+# Geração
+print("Gerando variações, aguarde...")
 
-    to_upper = input("Deseja transformar as senhas em maiúsculas? (S/N): ").lower() == 's'
-    use_leet = input("Deseja aplicar variações em Leet Speak? (S/N): ").lower() == 's'
-    min_palavras = int(input("Quantidade mínima de palavras por senha: "))
-    max_palavras = int(input("Quantidade máxima de palavras por senha: "))
-    min_len = int(input("Comprimento mínimo da senha final: "))
-    max_len = int(input("Comprimento máximo da senha final: "))
+final_passwords = set()
 
-    nome_arquivo = input("Nome do arquivo de saída (.txt será adicionado): ").strip() + '.txt'
-    with open(nome_arquivo, 'w', encoding='utf-8') as arquivo:
-        print("\nSenhas geradas:")
-        for senha in gerar_combinacoes(palavras, min_palavras, max_palavras, to_upper, use_leet, min_len, max_len):
-            arquivo.write(senha + '\n')
-            print(senha)
+for n in range(min_words, max_words + 1):
+    for combo in itertools.permutations(base_words, n):
+        base = ''.join(combo)
+        if min_len <= len(base) <= max_len:
+            variations = set([base])
+            if use_upper:
+                variations.update([base.upper(), base.capitalize()])
+            if use_leet:
+                for var in list(variations):
+                    variations.update(leet_variations(var))
+            for pw in variations:
+                if min_len <= len(pw) <= max_len:
+                    final_passwords.add(pw)
 
-    print(f"\nTodas as senhas foram salvas em '{nome_arquivo}'")
+# Salvar
+with open(output_file, "w", encoding="utf-8") as f:
+    for pw in sorted(final_passwords):
+        f.write(pw + "\n")
+
+print(f"Total de senhas geradas: {len(final_passwords)}")
+print(f"Arquivo salvo como: {output_file}")
 
 if __name__ == "__main__":
     print(ascii_art)
