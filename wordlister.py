@@ -11,9 +11,6 @@ ascii_art = r"""
 |_______/ |________/|_______/  \______/ |________/ \______/ 
                                                             
                                                             """
-
-
-
 # Leet map
 leet_map = {
     'a': ['a', '@', '4'],
@@ -79,10 +76,15 @@ def main():
         if use_special:
             chars += '!@#$%^&*()_-+=~`[]{}|\\:;"\'<>,.?/'
 
-        print("Gerando senhas...")
-        for length in range(min_len, max_len + 1):
-            for combination in itertools.product(chars, repeat=length):
-                print(''.join(combination))
+        nome_arquivo = input("Nome do arquivo de saída (.txt será adicionado): ").strip() + '.txt'
+        with open(nome_arquivo, 'w', encoding='utf-8') as arquivo:
+            print("Gerando senhas...")
+            for length in range(min_len, max_len + 1):
+                for combination in itertools.product(chars, repeat=length):
+                    senha = ''.join(combination)
+                    arquivo.write(senha + '\n')
+                    print(senha)
+        print(f"\nTodas as senhas foram salvas em '{nome_arquivo}'")
         return
 
     to_upper = input("Deseja transformar as senhas em maiúsculas? (S/N): ").lower() == 's'
@@ -92,9 +94,14 @@ def main():
     min_len = int(input("Comprimento mínimo da senha final: "))
     max_len = int(input("Comprimento máximo da senha final: "))
 
-    print("Senhas geradas:")
-    for senha in gerar_combinacoes(palavras, min_palavras, max_palavras, to_upper, use_leet, min_len, max_len):
-        print(senha)
+    nome_arquivo = input("Nome do arquivo de saída (.txt será adicionado): ").strip() + '.txt'
+    with open(nome_arquivo, 'w', encoding='utf-8') as arquivo:
+        print("\nSenhas geradas:")
+        for senha in gerar_combinacoes(palavras, min_palavras, max_palavras, to_upper, use_leet, min_len, max_len):
+            arquivo.write(senha + '\n')
+            print(senha)
+
+    print(f"\nTodas as senhas foram salvas em '{nome_arquivo}'")
 
 if __name__ == "__main__":
     print(ascii_art)
