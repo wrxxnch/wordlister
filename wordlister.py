@@ -1,4 +1,5 @@
 import itertools
+import os
 
 ascii_art = r"""
  /$$$$$$$  /$$$$$$$$ /$$$$$$$   /$$$$$$  /$$$$$$$$  /$$$$$$ 
@@ -11,77 +12,62 @@ ascii_art = r"""
 |_______/ |________/|_______/  \______/ |________/ \______/ 
                                                             
                                                             """
-def leet_variations(word):
-    leet_map = {
-        'a': ['4', '@'],
-        'e': ['3'],
-        'i': ['1', '!'],
-        'o': ['0'],
-        's': ['5', '$'],
-        't': ['7'],
-        'g': ['9']
-    }
-    variations = set([word])
-    for i, c in enumerate(word):
-        if c.lower() in leet_map:
-            for sub in leet_map[c.lower()]:
-                for variant in list(variations):
-                    new_variant = variant[:i] + sub + variant[i+1:]
-                    variations.add(new_variant)
-    return variations
+def main():
+    
 
-# Inputs
-wordlist_file = input("Arquivo com palavras base: ").strip()
-try:
-    with open(wordlist_file, "r", encoding="utf-8") as f:
+    base_file = input("Arquivo com palavras base: ").strip()
+    with open(base_file, "r", encoding="utf-8") as f:
         base_words = [line.strip() for line in f if line.strip()]
-except:
-    print("Erro ao abrir o arquivo.")
-    exit()
 
-min_words = input("Mínimo de palavras combinadas (deixe vazio para sem limite): ").strip()
-max_words = input("Máximo de palavras combinadas (deixe vazio para sem limite): ").strip()
-min_words = int(min_words) if min_words.isdigit() else 1
-max_words = int(max_words) if max_words.isdigit() else len(base_words)
+    min_comb = input("Mínimo de palavras combinadas (deixe vazio para sem limite): ").strip()
+    max_comb = input("Máximo de palavras combinadas (deixe vazio para sem limite): ").strip()
+    min_len = input("Tamanho mínimo da senha (deixe vazio para ignorar): ").strip()
+    max_len = input("Tamanho máximo da senha (deixe vazio para ignorar): ").strip()
+    use_upper = input("Gerar variações com maiúsculas? (s/n): ").strip().lower() == "s"
+    use_leet = input("Gerar variações com l33t? (s/n): ").strip().lower() == "s"
+    output_file = input("Nome do arquivo de saída: ").strip()
 
-min_len = input("Tamanho mínimo da senha (deixe vazio para ignorar): ").strip()
-max_len = input("Tamanho máximo da senha (deixe vazio para ignorar): ").strip()
-min_len = int(min_len) if min_len.isdigit() else 0
-max_len = int(max_len) if max_len.isdigit() else float('inf')
+    if not output_file:
+        print("Nome do arquivo de saída é obrigatório.")
+        return
 
-use_upper = input("Gerar variações com maiúsculas? (s/n): ").lower() == 's'
-use_leet = input("Gerar variações com l33t? (s/n): ").lower() == 's'
+    min_comb = int(min_comb) if min_comb else 1
+    max_comb = int(max_comb) if max_comb else len(base_words)
+    min_len = int(min_len) if min_len else None
+    max_len = int(max_len) if max_len else None
 
-output_file = input("Nome do arquivo de saída: ").strip()
-if not output_file:
-    output_file = "senhas.txt"
+    leet_map = str.maketrans({
+        'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 't': '7'
+    })
 
-# Geração
-print("Gerando variações, aguarde...")
+    def transform(word):
+        variations = [word]
+        if use_upper:
+            variations.append(word.upper())
+            variations.append(word.capitalize())
+        if use_leet:
+            variations += [w.translate(leet_map) for w in variations]
+        return variations
 
-final_passwords = set()
+    final_words = set()
 
-for n in range(min_words, max_words + 1):
-    for combo in itertools.permutations(base_words, n):
-        base = ''.join(combo)
-        if min_len <= len(base) <= max_len:
-            variations = set([base])
-            if use_upper:
-                variations.update([base.upper(), base.capitalize()])
-            if use_leet:
-                for var in list(variations):
-                    variations.update(leet_variations(var))
-            for pw in variations:
-                if min_len <= len(pw) <= max_len:
-                    final_passwords.add(pw)
+    print("Gerando variações, aguarde...")
 
-# Salvar
-with open(output_file, "w", encoding="utf-8") as f:
-    for pw in sorted(final_passwords):
-        f.write(pw + "\n")
+    for i in range(min_comb, max_comb + 1):
+        for combo in itertools.permutations(base_words, i):
+            combined = ''.join(combo)
+            for var in transform(combined):
+                if min_len and len(var) < min_len:
+                    continue
+                if max_len and len(var) > max_len:
+                    continue
+                final_words.add(var)
 
-print(f"Total de senhas geradas: {len(final_passwords)}")
-print(f"Arquivo salvo como: {output_file}")
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(final_words))
+
+    print(f"Total de senhas geradas: {len(final_words)}")
+    print(f"Arquivo salvo como: {output_file}")
 
 if __name__ == "__main__":
     print(ascii_art)
